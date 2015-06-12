@@ -5,65 +5,58 @@
 #include <opencv2/opencv.hpp>
 #include <set>
 
-namespace cloudcv
+struct Color
 {
+	size_t hash;
+	size_t count;
 
-    struct Color
-    {
-        int hash;
-        int count;
+	Color() : hash(0), count(0) {}
+	Color(int h, int c) : hash(h), count(c) {}
 
-        Color() : hash(0), count(0) {}
-        Color(int h, int c) : hash(h), count(c) {}
+	int distanceTo(const Color& other) const;
+	int distanceTo(const cv::Vec3b& other) const;
 
-        int distanceTo(const Color& other) const;
-        int distanceTo(const cv::Vec3b& other) const;
+	bool operator< (const Color& other) const 
+	{
+		return hash < other.hash;
+	}
+};
 
-        bool operator< (const Color& other) const
-        {
-            return hash < other.hash;
-        }
-    };
+struct DominantColor
+{
+	cv::Vec3b color;
+	size_t    totalPixels;
 
-    struct DominantColor
-    {
-        cv::Vec3b color;
-        int       totalPixels;
-
-        float     interclassVariance;
-        float     error;
-
-        // Html string representation like #FFFFFF
-        std::string html() const;
-    };
-
-    std::ostream& operator<<(std::ostream& out, const Color& res);
-    std::ostream& operator<<(std::ostream& out, const DominantColor& res);
+	float     interclassVariance;
+	float     error;
+};
 
 
-    class DominantColorsExtractor
-    {
-    public:
-        void process(const cv::Mat_<cv::Vec3b>& bgrImage);
 
-        std::vector<DominantColor> mainColors;
+class DominantColorsExtractor
+{
+public:
+	void process(const cv::Mat_<cv::Vec3b>& bgrImage);
 
-        RGBDistribution getColorDeviation() const;
+	std::vector<DominantColor> mainColors;
 
-        int getUniqueColors() const;
-        int getRedicedColors() const;
+	cv::Mat getImage() const;
 
-    protected:
-        typedef std::set<int> ColorsSet;
+	RGBDistribution getColorDeviation() const;
 
-        bool findLargestColorSet(int similarityTolerance, int minPixelsInSet, const std::set<Color>& input, std::set<Color>& colorsSet) const;
-        DominantColor computeFinalColor(const std::set<Color>& colorsSet) const;
+	size_t getUniqueColors() const;
+	size_t getRedicedColors() const;
 
-    private:
-        std::vector<unsigned char> rVec, gVec, bVec;
-        std::map<int, int> fullColorsTable;
-        std::map<int, int> quantizedColorsTable;
+protected:
+	typedef std::set<size_t> ColorsSet;
 
-    };
+	bool findLargestColorSet(int similarityTolerance, int minPixelsInSet, const std::set<Color>& input, std::set<Color>& colorsSet) const;
+	DominantColor computeFinalColor(const std::set<Color>& colorsSet) const;
 
-}
+private:
+	std::vector<unsigned char> rVec, gVec, bVec;
+	std::map<size_t, size_t> fullColorsTable;
+	std::map<size_t, size_t> quantizedColorsTable;
+
+};
+

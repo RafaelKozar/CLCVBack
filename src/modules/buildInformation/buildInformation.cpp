@@ -1,18 +1,14 @@
-#include <cloudcv.hpp>
-#include <framework/marshal/marshal.hpp>
+#include "buildInformation.hpp"
+#include "../../node/node_helpers.hpp"
 
-namespace cloudcv 
+using namespace v8;
+using namespace node;
+
+Handle<Value> buildInformation(const Arguments& args)
 {
-    NAN_METHOD(version)
-    {
-        NanScope();
-        std::string versionString = lexical_cast(CV_MAJOR_VERSION) + "." + lexical_cast(CV_MINOR_VERSION);
-        NanReturnValue(MarshalFromNative(versionString));
-    }
+    HandleScope scope;
 
-	NAN_METHOD(buildInformation)
-    {
-		NanEscapableScope();
-		NanReturnValue(MarshalFromNative(cv::getBuildInformation()));
-    }
+    std::string resultString = cv::getBuildInformation();
+
+    return String::New(resultString.c_str());
 }

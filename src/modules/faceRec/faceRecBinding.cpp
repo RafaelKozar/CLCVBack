@@ -1,5 +1,5 @@
-#include "modules/analyze/binding.hpp"
-#include "modules/analyze/analyze.hpp"
+#include "modules/faceRec/faceRecBinding.hpp"
+#include "modules/faceRec/faceRec.hpp"
 #include "modules/node/Marshal.hpp"
 
 #include <node_buffer.h>
@@ -7,9 +7,9 @@
 using namespace v8;
 using namespace node;
 
-struct ImageAnalyzeTask
+struct FaceDetectionTask
 {       
-    ImageAnalyzeTask(Local<Value> imageBuffer, Local<Value> callback)
+    FaceDetectionTask(Local<Value> imageBuffer, Local<Value> callback)
     {
         HandleScope scope;
         
@@ -26,7 +26,7 @@ struct ImageAnalyzeTask
         m_request->data = this;  
     }
 
-    virtual ~ImageAnalyzeTask()
+    virtual ~FaceDetectionTask()
     {
         m_callback.Dispose();
         delete m_request;
@@ -39,8 +39,8 @@ struct ImageAnalyzeTask
         // after the thread pool function completed.
         int status = uv_queue_work( uv_default_loop(), 
                                     m_request, 
-                                    &ImageAnalyzeTask::analyzeImageAsyncWork,
-                                    (uv_after_work_cb)ImageAnalyzeTask::analyzeImageAsyncAfter);
+                                    &FaceDetectionTask::DoAsyncWork,
+                                    (uv_after_work_cb)FaceDetectionTask::AsyncAfter);
         assert(status == 0);
     }
 
@@ -56,7 +56,7 @@ protected:
         cv::Mat input = cv::imdecode(m_imageData, 1);
         if (!input.empty())
         {
-            buildFromImage(input, m_analyzeResult);
+            detectFace(input, m_faceDetectionResult);
         }
     }
 
@@ -69,7 +69,7 @@ protected:
         HandleScope scope;
 
         const unsigned argc = 1;
-        Local<Value> argv[argc] = { Marshal::Native(m_analyzeResult) };
+        Local<Value> argv[argc] = { Marshal::Native(m_faceDetectionResult) };
 
         // Wrap the callback function call in a TryCatch so that we can call
         // node's FatalException afterwards. This makes it possible to catch
@@ -91,15 +91,15 @@ private:
         InvokeResultCallback();
     }
 
-    static void analyzeImageAsyncWork(uv_work_t* req)
+    static void DoAsyncWork(uv_work_t* req)
     {
-        ImageAnalyzeTask * task = static_cast<ImageAnalyzeTask*>(req->data);
+        FaceDetectionTask * task = static_cast<FaceDetectionTask*>(req->data);
         task->ExecuteNative();
     }
 
-    static void analyzeImageAsyncAfter(uv_work_t* req)
+    static void AsyncAfter(uv_work_t* req)
     {
-        ImageAnalyzeTask* task = static_cast<ImageAnalyzeTask*>(req->data);
+        FaceDetectionTask* task = static_cast<FaceDetectionTask*>(req->data);
         task->FinishTask();
         delete task;
     }
@@ -108,14 +108,11 @@ private:
     Persistent<Function>    m_callback;
     uv_work_t             * m_request;
 	
-	AnalyzeResult           m_analyzeResult;
+	FaceDetectionResult     m_faceDetectionResult;
 	std::vector<char>       m_imageData;
 };
 
-
-
-
-Handle<Value> analyzeImage(const Arguments& args)
+Handle<Value> detectFaces(const Arguments& args)
 {
     HandleScope scope;
 
@@ -138,8 +135,16 @@ Handle<Value> analyzeImage(const Arguments& args)
     // like the callback function we want to call when returning to the main
     // thread and the status information.
     
-    ImageAnalyzeTask* task = new ImageAnalyzeTask(args[0], args[1]);
+    FaceDetectionTask* task = new FaceDetectionTask(args[0], args[1]);
     task->StartTask();
 
     return Undefined();
+}
+
+bool initializeFaceDetector()
+{
+    std::string cascadeName       = "haarcascade_frontalface_alt.xml";
+    std::string nestedCascadeName = "haarcascade_eye_tree_eyeglasses.xml";
+
+    return initCascades(cascadeName, nestedCascadeName);
 }

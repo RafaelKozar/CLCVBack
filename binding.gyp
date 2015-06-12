@@ -1,52 +1,26 @@
 {
-
     'target_defaults': {
         'default_configuration': 'Release',
     },
 
-
-    'targets': [
+    "targets": [
         {
-            'target_name': "cloudcv",
+            "target_name": "cloudcv",
 
-            'sources': [ 
-                "src/cloudcv.cpp", 
-                "src/cloudcv.hpp",
-
-                "src/framework/marshal/marshal.hpp",                
-                "src/framework/marshal/marshal.cpp",
-
-                "src/framework/marshal/stl.hpp",                
-                "src/framework/marshal/stl.cpp",
+            "sources": [ 
+                "main.cpp", 
                 
-                "src/framework/marshal/opencv.hpp",                
-                "src/framework/marshal/opencv.cpp",
-                
-                "src/framework/marshal/primitives.hpp",                
-                "src/framework/marshal/primitives.cpp",
+                "src/node/node_helpers.hpp", 
+                "src/node/node_helpers.cpp",
 
-                "src/framework/marshal/node_object_builder.hpp",
-                "src/framework/marshal/node_object_builder.cpp",
-                
-                "src/framework/Image.hpp",                
-                "src/framework/Image.cpp",
+                "src/modules/node/Marshal.cpp", 
+                "src/modules/node/Marshal.hpp",                 
 
-                "src/framework/ImageSource.hpp",                
-                "src/framework/ImageSource.cpp",
-
-                "src/framework/Job.hpp",                
-                "src/framework/Job.cpp",
-
-                "src/framework/Async.hpp",
-                "src/framework/Async.cpp",
-                    
-                "src/framework/NanCheck.hpp",
-                "src/framework/NanCheck.cpp",
-                
                 "src/modules/common/Numeric.cpp", 
                 "src/modules/common/Numeric.hpp",                 
 
                 "src/modules/common/Color.hpp", 
+                "src/modules/common/Serialization.hpp", 
                 "src/modules/common/ScopedTimer.hpp", 
 
                 "src/modules/common/ImageUtils.hpp", 
@@ -54,62 +28,114 @@
 
                 "src/modules/analyze/analyze.cpp", 
                 "src/modules/analyze/analyze.hpp", 
+                "src/modules/analyze/binding.hpp", 
                 "src/modules/analyze/binding.cpp", 
                 "src/modules/analyze/dominantColors.hpp", 
                 "src/modules/analyze/dominantColors.cpp", 
 
-                "src/modules/buildInformation/buildInformation.cpp", 
+                "src/modules/faceRec/faceRec.cpp", 
+                "src/modules/faceRec/faceRec.hpp", 
+                "src/modules/faceRec/faceRecBinding.hpp", 
+                "src/modules/faceRec/faceRecBinding.cpp", 
 
-                "src/modules/cameraCalibration/CameraCalibrationBinding.cpp", 
-                "src/modules/cameraCalibration/CameraCalibrationAlgorithm.hpp", 
-                "src/modules/cameraCalibration/CameraCalibrationAlgorithm.cpp", 
+                "src/modules/buildInformation/buildInformation.cpp", 
+                "src/modules/buildInformation/buildInformation.hpp", 
             ],
 
             'include_dirs': [
               'src/',
-              "<!(node -e \"require('nan')\")",
-              "<!(node -e \"require('native-opencv').include_dirs()\")"
             ],
 
-            'libraries': [
-                ">!(node -e \"require('native-opencv').libraries()\")"
-            ],
-
-            'target_conditions': [
+            'conditions': [
             
-                ['OS=="mac"', {
-                
+                ['OS=="win"', {
+
+                    'configurations': {
+                      'Debug': {
+                        'defines': [ 'DEBUG', '_DEBUG' ],
+                        'msvs_settings': {
+                          'VCCLCompilerTool': {
+                            'RuntimeLibrary': 2, # static debug
+                          },
+                        },
+                      },
+                      'Release': {
+                        'defines': [ 'NDEBUG' ],
+                        'msvs_settings': {
+                          'VCCLCompilerTool': {
+                            'RuntimeLibrary': 2, # static release
+                          },
+                        },
+                      }
+                    },
+
                     'defines': [
-                        'TARGET_PLATFORM_MAC',
+                        'TARGET_PLATFORM_WINDOWS',
                     ],
 
-                    'xcode_settings': {
-                        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-                        'OTHER_CFLAGS': [ '-g', '-mmacosx-version-min=10.7', '-std=c++11', '-stdlib=libc++', '-O3', '-Wall' ],
-                        'OTHER_CPLUSPLUSFLAGS': [ '-g', '-mmacosx-version-min=10.7', '-std=c++11', '-stdlib=libc++', '-O3', '-Wall' ]
-                    }
-                }],
+                    'include_dirs': [
+                        '$(OPENCV_ROOT)/include'
+                    ],
 
-                
-                ['OS=="linux"', {
-                
+                    'libraries': [
+                        "$(OPENCV_ROOT)/lib/opencv_calib3d246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_contrib246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_core246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_features2d246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_flann246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_highgui246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_imgproc246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_legacy246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_ml246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_nonfree246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_objdetect246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_photo246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_stitching246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_superres246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_ts246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_video246.lib",
+                        "$(OPENCV_ROOT)/lib/opencv_videostab246.lib",
+                        "$(OPENCV_ROOT)/share/OpenCV/3rdparty/lib/libjpeg.lib",
+                        "$(OPENCV_ROOT)/share/OpenCV/3rdparty/lib/libpng.lib",
+                        "$(OPENCV_ROOT)/share/OpenCV/3rdparty/lib/libtiff.lib",
+                        "$(OPENCV_ROOT)/share/OpenCV/3rdparty/lib/zlib.lib"
+                    ]
+                }
+                , {
+
                     'defines': [
                         'TARGET_PLATFORM_LINUX',
                     ],
 
-                    'libraries!': [ '-undefined dynamic_lookup' ],
+                    'libraries': [
+                        "/usr/local/lib/libopencv_contrib.a",
+                        "/usr/local/lib/libopencv_stitching.a",
+                        "/usr/local/lib/libopencv_nonfree.a",
+                        "/usr/local/lib/libopencv_ts.a", 
+                        "/usr/local/lib/libopencv_videostab.a",
+                        "/usr/local/lib/libopencv_gpu.a", 
+                        "/usr/local/lib/libopencv_legacy.a", 
+                        "/usr/local/lib/libopencv_ml.a", 
+                        "/usr/local/lib/libopencv_objdetect.a", 
+                        "/usr/local/lib/libopencv_calib3d.a", 
+                        "/usr/local/lib/libopencv_photo.a", 
+                        "/usr/local/lib/libopencv_video.a", 
+                        "/usr/local/lib/libopencv_features2d.a", 
+                        "/usr/local/lib/libopencv_highgui.a", 
+                        "/usr/local/share/OpenCV/3rdparty/lib/liblibjasper.a", 
+                        "/usr/local/share/OpenCV/3rdparty/lib/liblibtiff.a", 
+                        "/usr/local/share/OpenCV/3rdparty/lib/liblibpng.a", 
+                        "/usr/local/share/OpenCV/3rdparty/lib/liblibjpeg.a", 
+                        "/usr/local/lib/libopencv_flann.a", 
+                        "/usr/local/lib/libopencv_imgproc.a", 
+                        "/usr/local/lib/libopencv_core.a", 
+                        "/usr/local/share/OpenCV/3rdparty/lib/libzlib.a"
+                    ]
+                }],             
+            ],
 
-                    'cflags_cc!': [ '-fno-exceptions' ],
-                    "cflags": [ '-std=gnu++11', '-fexceptions' ],                    
-                }],
+            
 
-                ['OS=="win"', {
-                    'defines': [
-                        'TARGET_PLATFORM_WINDOWS',
-                    ]             
-                }]
-
-            ]
         }
     ]
 }

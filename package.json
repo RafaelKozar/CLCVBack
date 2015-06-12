@@ -1,32 +1,28 @@
 {
-  "name": "cloudcv-backend",
-  "version": "1.0.1",
-  "description": "CloudCV backend module",
-  "author": "Eugene Khvedchenya <ekhvedchenya@gmail.com>",
-  "license": "MIT",
-  "main": "cloudcv.js",
+    "name": "cloudcv",
+    "version": "1.0.1",
+    "description": "CloudCV backend module",
+    "author": "Eugene Khvedchenya <ekhvedchenya@gmail.com>",
+    "license": "MIT",
+    "main": "./build/Release/cloudcv",
 
-  "scripts": {
-    "test": "mocha test/*.js"
-  },
+    "scripts": {
+        "preinstall": "node-gyp clean rebuild",
+        "test": "expresso test/*"
+    },
 
-  "dependencies": {
-    "nan": "*",
-    "native-opencv": "BloodAxe/npm-native-opencv"
-  },
+    "devDependencies": {
+        "expresso": "*"
+    },
+    
+    "keywords": [
+        "opencv",
+        "computer",
+        "vision"
+    ],
 
-  "devDependencies": {
-    "mocha": "*"
-  },
-
-  "keywords": [
-    "opencv",
-    "computer",
-    "vision"
-  ],
-
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/BloodAxe/CloudCVBackend.git"
-  }
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/RafaelKozar/CLCVBack.git"
+    }
 }
